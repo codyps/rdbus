@@ -1,0 +1,12 @@
+[package]
+name = "rdbus"
+version = "0.1.0"
+authors = ["Cody P Schafer <dev@codyps.com>"]
+license = "LGPL-3+ OR GPL-2+"
+description = "D-Bus in pure rust (not yet usable)"
+repository = "https://github.com/jmesmon/rdbus"
+include = ["Cargo.toml", "src/**/*.rs"]
+documentation = "https://docs.rs/rdbus"
+
+[dependencies]
+utf8-cstr = "0.*"
