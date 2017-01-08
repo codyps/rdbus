@@ -1,6 +1,6 @@
 extern crate utf8_cstr;
-extern crate unix_socket;
 
+mod type_sig;
 mod types;
 
 
@@ -13,8 +13,9 @@ mod types;
  * bus is not generally needed (instead, it is likely that one should take ownership of more than
  * one name)
  */
-struct Bus {
-
+pub struct Bus {
+    /* FIXME: allow non-unix sockets. Tcp is typically used on windows systems */
+    sock: std::os::unix::net::UnixDatagram,
 }
 
 impl for Bus {
@@ -36,6 +37,14 @@ impl for Bus {
      * Open the system bus
      */
     fn open_system() -> Result<Bus, String> {
+        unimplimented!();
+    }
+
+    /**
+     * Create a new bus connection from an already openned & connected unix socket
+     */
+    #[cfg(unix)]
+    pub fn open_unix(s: std::os::unix::net::UnixDatagram) -> Result<Bus, String> {
         unimplimented!();
     }
 }
