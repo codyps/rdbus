@@ -48,3 +48,11 @@ impl Bus {
         unimplemented!();
     }
 }
+
+pub struct Message {
+
+}
+
+impl Message {
+
+}

@@ -9,6 +9,7 @@ pub struct Type<'a> {
     v: &'a str
 }
 
+#[derive(Debug)]
 pub enum TypeError {
     Invalid(char),
     ParenUnclosed(u64),
@@ -16,13 +17,23 @@ pub enum TypeError {
     ParenClosedBeforeOpen,
 }
 
-impl ::std::fmt::Debug for TypeError {
+impl ::std::fmt::Display for TypeError {
     fn fmt(&self, fmt: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         match self {
             &TypeError::Invalid(c) => write!(fmt, "Type spec contained invalid character '{}'", c),
             &TypeError::ParenUnclosed(c) => write!(fmt, "Type spec left {} parens unclosed", c),
-            &TypeError::ParenClosedBeforeOpen => write!(fmt, "Type spec closed a paren without having any open"),
-            &TypeError::ElementRequired => write!(fmt, "Type spec is missing required element for array"),
+            _ => write!(fmt, "{}", ::std::error::Error::description(self))
+        }
+    }
+}
+
+impl ::std::error::Error for TypeError {
+    fn description(&self) -> &str {
+        match self {
+            &TypeError::Invalid(c) => "Type spec contained invalid character",
+            &TypeError::ParenUnclosed(c) => "Type spec left parens unclosed",
+            &TypeError::ParenClosedBeforeOpen => "Type spec closed a paren without having any open",
+            &TypeError::ElementRequired => "Type spec is missing required element for array",
         }
     }
 }
