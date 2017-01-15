@@ -3,6 +3,11 @@
  *  - owned vs reference
  *  - builder vs completed
  *
+ * TODO:
+ *  - variants have a depth limit of 64
+ *  - variants must only have a single type
+ *  - some contexts may allow 'r' (struct) or 'e' (entry), but these don't
+ *
  */
 
 pub struct Type<'a> {
@@ -30,8 +35,8 @@ impl ::std::fmt::Display for TypeError {
 impl ::std::error::Error for TypeError {
     fn description(&self) -> &str {
         match self {
-            &TypeError::Invalid(c) => "Type spec contained invalid character",
-            &TypeError::ParenUnclosed(c) => "Type spec left parens unclosed",
+            &TypeError::Invalid(_) => "Type spec contained invalid character",
+            &TypeError::ParenUnclosed(_) => "Type spec left parens unclosed",
             &TypeError::ParenClosedBeforeOpen => "Type spec closed a paren without having any open",
             &TypeError::ElementRequired => "Type spec is missing required element for array",
         }
@@ -47,7 +52,7 @@ impl<'a> Type<'a> {
         for i in v.chars() {
             match i {
                 'y'|'b'|'n'|'q'|'i'|'u'|'x'|'t'|'d'|'h'|
-                
+                'v'|
                 's'|'o'|'g' => {
                     /* valid types */
                     element_required = false;
@@ -87,7 +92,7 @@ impl<'a> Type<'a> {
     }
     */
 
-    pub fn append_type_code(&mut self, code: u8) -> Result<(), String> {
+    pub fn append_type_code(&mut self, _code: u8) -> Result<(), String> {
         unimplemented!();
     }
 }

@@ -2,6 +2,7 @@ extern crate utf8_cstr;
 
 pub mod type_sig;
 pub mod types;
+pub mod message;
 
 
 /**
@@ -22,21 +23,21 @@ impl Bus {
     /**
      * Open the appropriate bus
      */
-    fn open() -> Result<Bus, String> {
+    pub fn open() -> Result<Bus, String> {
         unimplemented!();
     }
 
     /**
      * Open the user bus
      */
-    fn open_user() -> Result<Bus, String> {
+    pub fn open_user() -> Result<Bus, String> {
         unimplemented!();
     }
 
     /**
      * Open the system bus
      */
-    fn open_system() -> Result<Bus, String> {
+    pub fn open_system() -> Result<Bus, String> {
         unimplemented!();
     }
 
@@ -45,14 +46,7 @@ impl Bus {
      */
     #[cfg(unix)]
     pub fn open_unix(s: std::os::unix::net::UnixDatagram) -> Result<Bus, String> {
-        unimplemented!();
+        Ok(Bus { sock: s } )
     }
 }
 
-pub struct Message {
-
-}
-
-impl Message {
-
-}

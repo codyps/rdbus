@@ -1,16 +1,12 @@
 extern crate utf8_cstr;
 
 use std::os::raw::c_char;
-use std::{fmt,str};
+use std::{str};
 use std::ffi::CStr;
-use std::os::unix::io::AsRawFd;
-use std::mem::{uninitialized, transmute, forget};
-use std::ptr;
-use std::ops::{Deref,DerefMut};
+use std::mem::{transmute};
+use std::ops::{Deref};
 use std::marker::PhantomData;
-use std::borrow::{Borrow,BorrowMut};
 use std::result;
-use self::utf8_cstr::Utf8CStr;
 
 /**
  * A wrapper which promises it always holds a valid dbus object path
