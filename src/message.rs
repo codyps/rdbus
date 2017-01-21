@@ -1,25 +1,38 @@
+enum EncodeError {
+    TooLong,
+}
+
 trait DBusType {
     /*
      * - use little endian if you are supplying bytes directly (this should only be needed for the
      *   basic types)
      * - failures (potentially) occur due to violating message rules, like depth
      */
-    fn encode_into(&self, &mut Message) -> Result<(),String>;
+    fn encode_into(&self, &mut Message) -> Result<(),EncodeError>;
 
     /*
-    fn decode_from(&self, &mut MessageIter) -> Result<(),String>
+    fn decode_from(&self, &mut MessageIter) -> Result<(),DecodeError>
     */
 }
 
+fn try_cast(v: usize) -> Result<u32, EncodeError>
+{
+    if v > (::std::u32::MAX as usize) {
+        Err(EncodeError::TooLong)
+    } else {
+        Ok(v as u32)
+    }
+}
+
 impl<'a, T: DBusType + ?Sized> DBusType for &'a T {
-    fn encode_into(&self, msg: &mut Message) -> Result<(), String>
+    fn encode_into(&self, msg: &mut Message) -> Result<(), EncodeError>
     {
         (*self).encode_into(msg)
     }
 }
 
 impl DBusType for u32 {
-    fn encode_into(&self, msg: &mut Message) -> Result<(), String>
+    fn encode_into(&self, msg: &mut Message) -> Result<(), EncodeError>
     {
         let i = *self;
         let v = [i as u8, (i >> 8) as u8, (i >> 16) as u8, (i >> 24) as u8];
@@ -29,7 +42,7 @@ impl DBusType for u32 {
     }
 }
 impl DBusType for bool {
-    fn encode_into(&self, msg: &mut Message) -> Result<(), String>
+    fn encode_into(&self, msg: &mut Message) -> Result<(), EncodeError>
     {
         let v = if *self { 1u32 } else { 0u32 };
         msg.append(v)
@@ -37,14 +50,51 @@ impl DBusType for bool {
 }
 
 impl DBusType for str {
-    fn encode_into(&self, msg: &mut Message) -> Result<(), String>
+    fn encode_into(&self, msg: &mut Message) -> Result<(), EncodeError>
     {
-        try!(msg.append(self.len() as u32));
+        try!(msg.append(try!(try_cast(self.len()))));
         msg.data.extend(self.as_bytes());
         msg.data.push(0);
         Ok(())
     }
 }
+
+impl<T: DBusType> DBusType for [T]  {
+    fn encode_into(&self, msg: &mut Message) -> Result<(), EncodeError>
+    {
+        try!(msg.append(try!(try_cast(self.len()))));
+        for e in self.iter() {
+            try!(msg.append(e));
+        }
+        Ok(())
+    }
+}
+
+impl<T: DBusType> DBusType for Vec<T>  {
+    fn encode_into(&self, msg: &mut Message) -> Result<(), EncodeError>
+    {
+        try!(msg.append(try!(try_cast(self.len()))));
+        for e in self.iter() {
+            try!(msg.append(e));
+        }
+        Ok(())
+    }
+}
+
+/*
+// conflicts with the &'a T impl
+impl<T: DBusType, I: Iterator<Item=T> + ExactSizeIterator + Clone> DBusType for I  {
+    fn encode_into(&self, msg: &mut Message) -> Result<(), EncodeError>
+    {
+        try!(msg.append(try!(try_cast(self.len()))));
+        let mut i = self.clone();
+        for e in i {
+            try!(msg.append(e));
+        }
+        Ok(())
+    }
+}
+*/
 
 pub struct Message {
     data: Vec<u8>
@@ -88,7 +138,7 @@ impl Message {
         }
     }
 
-    fn append<T: DBusType>(&mut self, value: T) -> Result<(), String>
+    fn append<T: DBusType>(&mut self, value: T) -> Result<(), EncodeError>
     {
         value.encode_into(self)
     }
