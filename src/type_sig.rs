@@ -109,8 +109,10 @@ impl<'a> ::std::borrow::Borrow<str> for Type<'a> {
     }
 }
 
+#[cfg(test)]
 mod test {
     use super::Type;
+
     #[test]
     fn full_strings() {
         Type::from_str("aa").err().unwrap();

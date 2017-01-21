@@ -1,3 +1,7 @@
+//! DBus "Valid Names" are strings with extra restrictions. These are used to refer to various
+//! things on dbus at runtime: Services, Objects, and Interfaces each have a particular name
+//! format.
+
 extern crate utf8_cstr;
 
 use std::os::raw::c_char;
@@ -5,7 +9,6 @@ use std::{str};
 use std::ffi::CStr;
 use std::mem::{transmute};
 use std::ops::{Deref};
-use std::marker::PhantomData;
 use std::result;
 
 /**
@@ -33,6 +36,10 @@ impl ObjectPath {
     pub fn from_bytes(b: &[u8]) -> result::Result<&ObjectPath, &'static str> {
         if b.len() < 1 {
             return Err("Path must have at least 1 character ('/')");
+        }
+
+        if b.len() > 255 {
+            return Err("Path may not have more than 255 characters");
         }
 
         if b[0] != b'/' as u8 {
@@ -127,6 +134,10 @@ impl InterfaceName {
 
         if b.len() < 1 {
             return Err("Name must have more than 0 characters");
+        }
+
+        if b.len() > 255 {
+            return Err("Name may not have more than 255 characters");
         }
 
         match b[0] {
@@ -250,8 +261,8 @@ impl BusName {
             return Err("Name must have more than 0 characters");
         }
 
-        if b.len() > 256 {
-            return Err("Must be shorter than 255 characters");
+        if b.len() > 255 {
+            return Err("Name must not be greater than 255 characters");
         }
 
         let mut is_unique = false;

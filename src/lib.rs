@@ -1,7 +1,13 @@
 extern crate utf8_cstr;
+#[macro_use]
+extern crate bitflags;
 
+
+pub mod auth;
 pub mod type_sig;
-pub mod types;
+pub mod marshal;
+pub mod names;
+pub mod header;
 pub mod message;
 
 

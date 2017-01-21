@@ -10,3 +10,4 @@ documentation = "https://docs.rs/rdbus"
 
 [dependencies]
 utf8-cstr = "0.*"
+bitflags = "*"
