@@ -11,6 +11,13 @@ trait DBusType {
     */
 }
 
+impl<'a, T: DBusType + ?Sized> DBusType for &'a T {
+    fn encode_into(&self, msg: &mut Message) -> Result<(), String>
+    {
+        (*self).encode_into(msg)
+    }
+}
+
 impl DBusType for u32 {
     fn encode_into(&self, msg: &mut Message) -> Result<(), String>
     {
@@ -26,6 +33,16 @@ impl DBusType for bool {
     {
         let v = if *self { 1u32 } else { 0u32 };
         msg.append(v)
+    }
+}
+
+impl DBusType for str {
+    fn encode_into(&self, msg: &mut Message) -> Result<(), String>
+    {
+        try!(msg.append(self.len() as u32));
+        msg.data.extend(self.as_bytes());
+        msg.data.push(0);
+        Ok(())
     }
 }
 
@@ -106,5 +123,18 @@ mod test {
         assert_eq!(m.data, [2, 0]);
         unsafe { m.align_to(2); }
         assert_eq!(m.data, [2, 0]);
+    }
+
+    #[test]
+    fn spec_example_1() {
+        let mut m = Message::new();
+        m.append("foo");
+        m.append("+");
+        m.append("bar");
+        assert_eq!(m.data, [
+                   0x03,0,0,0,0x66,0x6f,0x6f,0x00,
+                   0x01,0,0,0,0x2b,0x00,0x00,0x00,
+                   0x03,0,0,0,0x62,0x61,0x72,0x00,
+        ]);
     }
 }
