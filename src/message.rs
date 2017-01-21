@@ -1,3 +1,4 @@
+#[derive(Debug)]
 enum EncodeError {
     TooLong,
 }
@@ -41,18 +42,33 @@ impl DBusType for u32 {
         Ok(())
     }
 }
+
+impl DBusType for u64 {
+    fn encode_into(&self, msg: &mut Message) -> Result<(), EncodeError>
+    {
+        let i = *self;
+        let v = [
+            i as u8, (i >> 8) as u8, (i >> 16) as u8, (i >> 24) as u8,
+            (i >> 32) as u8, (i >> 40) as u8, (i >> 48) as u8, (i >> 56) as u8
+        ];
+        unsafe {msg.align_to(v.len());}
+        msg.data.extend(&v);
+        Ok(())
+    }
+}
+
 impl DBusType for bool {
     fn encode_into(&self, msg: &mut Message) -> Result<(), EncodeError>
     {
         let v = if *self { 1u32 } else { 0u32 };
-        msg.append(v)
+        v.encode_into(msg)
     }
 }
 
 impl DBusType for str {
     fn encode_into(&self, msg: &mut Message) -> Result<(), EncodeError>
     {
-        try!(msg.append(try!(try_cast(self.len()))));
+        try!(try!(try_cast(self.len())).encode_into(msg));
         msg.data.extend(self.as_bytes());
         msg.data.push(0);
         Ok(())
@@ -62,20 +78,9 @@ impl DBusType for str {
 impl<T: DBusType> DBusType for [T]  {
     fn encode_into(&self, msg: &mut Message) -> Result<(), EncodeError>
     {
-        try!(msg.append(try!(try_cast(self.len()))));
+        try!(try!(try_cast(::std::mem::size_of_val(self))).encode_into(msg));
         for e in self.iter() {
-            try!(msg.append(e));
-        }
-        Ok(())
-    }
-}
-
-impl<T: DBusType> DBusType for Vec<T>  {
-    fn encode_into(&self, msg: &mut Message) -> Result<(), EncodeError>
-    {
-        try!(msg.append(try!(try_cast(self.len()))));
-        for e in self.iter() {
-            try!(msg.append(e));
+            try!(e.encode_into(msg));
         }
         Ok(())
     }
@@ -178,13 +183,25 @@ mod test {
     #[test]
     fn spec_example_1() {
         let mut m = Message::new();
-        m.append("foo");
-        m.append("+");
-        m.append("bar");
+        m.append("foo").unwrap();
+        m.append("+").unwrap();
+        m.append("bar").unwrap();
         assert_eq!(m.data, [
                    0x03,0,0,0,0x66,0x6f,0x6f,0x00,
                    0x01,0,0,0,0x2b,0x00,0x00,0x00,
                    0x03,0,0,0,0x62,0x61,0x72,0x00,
         ]);
     }
+
+    #[test]
+    fn spec_example_marshalling_containers() {
+        let mut m = Message::new();
+        m.append(&[5u64][..]).unwrap();
+        assert_eq!(m.data, [
+                   8,0,0,0,
+                   0,0,0,0,
+                   5,0,0,0,0,0,0,0
+        ]);
+    }
+
 }
