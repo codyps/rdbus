@@ -1,12 +1,36 @@
 #[repr(packed)]
 pub struct Bus {
-    endian: u8,
-    typ: u8,
-    flags: u8,
+    endian: Endian,
+    typ: Type,
+    flags: Flags,
     version: u8,
 
     body_size: u32,
     serial: u32,
+}
+
+impl Bus {
+    pub fn new() -> Bus {
+        Bus {
+            endian: ENDIAN_LITTLE,
+            typ: TYPE_INVALID,
+            flags: FLAGS_NONE,
+            version: 1,
+
+            body_size: 0,
+            serial: 0,
+        }
+    }
+}
+
+bitflags! {
+    pub flags Type: u8 {
+        const TYPE_INVALID = 0,
+        const TYPE_METHOD_CALL = 1,
+        const TYPE_METHOD_RETURN = 2,
+        const TYPE_METHOD_ERROR = 3,
+        const TYPE_METHOD_SIGNAL = 4,
+    }
 }
 
 bitflags! {
@@ -18,6 +42,7 @@ bitflags! {
 
 bitflags! {
     pub flags Flags: u8 {
+        const FLAGS_NONE = 0,
         const BUS_MESSAGE_NO_REPLY_EXPECETED = 1,
         const BUS_MESSAGE_NO_AUTO_START = 2,
         const BUS_MESSAGE_ALLOW_INTERACTIVE_AUTH = 4,
